@@ -32,8 +32,7 @@ public class ProductControllerTest {
     @Test
     public void shouldReturnEmptyListWhenNoProductsExist() throws Exception {
         mockMvc.perform(get("/products"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[]"))
+                .andExpect(status().isNoContent()) // Verifica o status 204
                 .andDo(print());
     }
 
@@ -50,7 +49,7 @@ public class ProductControllerTest {
         mockMvc.perform(post("/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(newProductJson))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated()) // Verifica o status 201
                 .andExpect(jsonPath("$.name").value("Notebook"))
                 .andExpect(jsonPath("$.quantity").value(10))
                 .andExpect(jsonPath("$.price").value(2500.00))
@@ -59,27 +58,25 @@ public class ProductControllerTest {
 
     @Test
     public void shouldReturnBadRequestWhenProductIsInvalid() throws Exception {
-        // Tenta salvar um produto com dados inválidos
         String invalidProductJson = """
                 {
                     "name": "",
-                    "price": -10.0,
-                    "quantity": -5
+                    "quantity": -5,
+                    "price": -10.0
                 }
                 """;
 
         mockMvc.perform(post("/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidProductJson))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isBadRequest()) // Verifica o erro 400
                 .andDo(print());
     }
 
     @Test
     public void shouldReturnNotFoundWhenProductDoesNotExist() throws Exception {
-        // Tenta buscar um produto inexistente
         mockMvc.perform(get("/products/999"))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isNotFound()) // Verifica o erro 404
                 .andDo(print());
     }
 }
