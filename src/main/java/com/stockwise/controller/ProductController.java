@@ -4,13 +4,15 @@ import com.stockwise.model.Product;
 import com.stockwise.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
+@Validated
 public class ProductController {
 
     @Autowired
@@ -25,14 +27,16 @@ public class ProductController {
     // Buscar produto por ID
     @GetMapping("/{id}")
     public ResponseEntity<Product> findById(@PathVariable Long id) {
-        Optional<Product> product = productService.findById(id);
-        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return productService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Salvar ou atualizar produto
     @PostMapping
-    public Product save(@RequestBody Product product) {
-        return productService.save(product);
+    public ResponseEntity<Product> save(@Valid @RequestBody Product product) {
+        Product savedProduct = productService.save(product);
+        return ResponseEntity.ok(savedProduct);
     }
 
     // Deletar produto por ID
