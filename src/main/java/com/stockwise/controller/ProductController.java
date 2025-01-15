@@ -2,17 +2,20 @@ package com.stockwise.controller;
 
 import com.stockwise.model.Product;
 import com.stockwise.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
-@Validated
 public class ProductController {
 
     @Autowired
@@ -20,23 +23,26 @@ public class ProductController {
 
     // Listar todos os produtos
     @GetMapping
-    public List<Product> findAll() {
-        return productService.findAll();
+    public ResponseEntity<List<Product>> findAll() {
+        List<Product> products = productService.findAll();
+        if (products.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(products);
     }
 
     // Buscar produto por ID
     @GetMapping("/{id}")
     public ResponseEntity<Product> findById(@PathVariable Long id) {
-        return productService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<Product> product = productService.findById(id);
+        return product.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // Salvar ou atualizar produto
     @PostMapping
     public ResponseEntity<Product> save(@Valid @RequestBody Product product) {
         Product savedProduct = productService.save(product);
-        return ResponseEntity.ok(savedProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
 
     // Deletar produto por ID
@@ -45,8 +51,16 @@ public class ProductController {
         if (productService.findById(id).isPresent()) {
             productService.deleteById(id);
             return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
+    }
+
+    // Tratamento de erros de validação
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(errors);
     }
 }
