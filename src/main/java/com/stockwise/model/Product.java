@@ -1,6 +1,7 @@
 package com.stockwise.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 public class Product {
@@ -9,13 +10,16 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome do produto não pode estar vazio.")
     private String name;
 
-    private Integer quantity;
+    @Min(value = 0, message = "O preço do produto deve ser maior ou igual a zero.")
+    private double price;
 
-    private Double price;
+    @Min(value = 0, message = "A quantidade do produto deve ser maior ou igual a zero.")
+    private int quantity;
 
-    // Getters and Setters
+    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -32,19 +36,19 @@ public class Product {
         this.name = name;
     }
 
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public Double getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(double price) {
         this.price = price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 }
